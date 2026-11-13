@@ -1,19 +1,19 @@
 # Giatinh API
 
-Express + MongoDB + Cloudinary backend for the M.VOSS studio site.
+Express + MongoDB + Vercel Blob backend for the M.VOSS studio site.
 
 ## Setup
 
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env — set MONGODB_URI, JWT_SECRET, ADMIN_PASSWORD, Cloudinary keys
+# Edit .env — set MONGODB_URI, JWT_SECRET, ADMIN_PASSWORD, BLOB_READ_WRITE_TOKEN
 npm install
 ```
 
 Requires a running MongoDB instance (`MONGODB_URI`).
 
-Cloudinary keys are optional until you call `POST /api/upload`. Hero/posts can be seeded with Unsplash URLs without Cloudinary.
+`BLOB_READ_WRITE_TOKEN` is optional until you call `POST /api/upload`. Hero/posts can be seeded with image URLs without it.
 
 ## Run
 
@@ -82,6 +82,4 @@ Response includes `url`, `publicId`, `resourceType`. Attach those to hero slides
 | `JWT_SECRET` | Signing secret for JWTs |
 | `ADMIN_PASSWORD` | Used by `npm run seed` |
 | `CLIENT_ORIGIN` | CORS origin (Vite default `http://localhost:5173`) |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud |
-| `CLOUDINARY_API_KEY` | Cloudinary key |
-| `CLOUDINARY_API_SECRET` | Cloudinary secret |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read-write token |

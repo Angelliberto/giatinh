@@ -19,16 +19,11 @@ export const env = {
   jwtSecret: required('JWT_SECRET', 'dev-jwt-secret-change-me'),
   adminPassword: required('ADMIN_PASSWORD', 'voss2026'),
   clientOrigin: required('CLIENT_ORIGIN', 'http://localhost:3000'),
-  cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME ?? '',
-    apiKey: process.env.CLOUDINARY_API_KEY ?? '',
-    apiSecret: process.env.CLOUDINARY_API_SECRET ?? '',
-  },
+  blobToken: process.env.BLOB_READ_WRITE_TOKEN ?? '',
 };
 
-export function isCloudinaryConfigured(): boolean {
-  const { cloudName, apiKey, apiSecret } = env.cloudinary;
-  return Boolean(cloudName && apiKey && apiSecret);
+export function isBlobConfigured(): boolean {
+  return Boolean(env.blobToken);
 }
 
 /** Safe host for logs — never prints password */

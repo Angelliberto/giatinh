@@ -1,7 +1,7 @@
 import { Router, type Response } from 'express';
 import { HeroImage } from '../models/HeroImage.js';
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
-import { destroyAsset } from '../services/cloudinary.js';
+import { destroyAsset } from '../services/storage.js';
 
 const router = Router();
 
@@ -71,9 +71,9 @@ router.delete('/:id', requireAuth, async (req: AuthedRequest, res: Response) => 
 
   if (image.publicId) {
     try {
-      await destroyAsset(image.publicId, 'image');
+      await destroyAsset(image.publicId);
     } catch (err) {
-      console.warn('Cloudinary destroy failed for hero image:', err);
+      console.warn('Storage delete failed for hero image:', err);
     }
   }
 

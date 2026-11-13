@@ -3,8 +3,8 @@ import { isIP } from 'node:net';
 import multer from 'multer';
 import { Asset } from '../models/Asset.js';
 import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
-import { destroyAsset, uploadBuffer } from '../services/cloudinary.js';
-import { isCloudinaryConfigured } from '../config/env.js';
+import { destroyAsset, uploadBuffer } from '../services/storage.js';
+import { isBlobConfigured } from '../config/env.js';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -104,9 +104,9 @@ uploadRouter.post(
   requireAuth,
   upload.single('file'),
   async (req: AuthedRequest, res: Response) => {
-    if (!isCloudinaryConfigured()) {
+    if (!isBlobConfigured()) {
       res.status(503).json({
-        error: 'Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.',
+        error: 'File storage is not configured. Set BLOB_READ_WRITE_TOKEN.',
       });
       return;
     }
@@ -123,7 +123,7 @@ uploadRouter.post(
       const result = await uploadBuffer(req.file.buffer, {
         folder,
         filename: req.file.originalname,
-        resourceType: 'auto',
+        contentType: req.file.mimetype,
       });
 
       const saveToVault = req.body.saveToVault !== 'false' && req.body.saveToVault !== false;
@@ -164,9 +164,9 @@ assetsRouter.delete('/:id', requireAuth, async (req: AuthedRequest, res: Respons
   }
 
   try {
-    await destroyAsset(asset.publicId, asset.resourceType as 'image' | 'video' | 'raw');
+    await destroyAsset(asset.publicId);
   } catch (err) {
-    console.warn('Cloudinary destroy failed:', err);
+    console.warn('Storage delete failed:', err);
   }
 
   res.json({ ok: true });
