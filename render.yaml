@@ -1,0 +1,30 @@
+# Free Render web service for the Express API only.
+# Secrets are filled in the Render dashboard (sync: false), not stored here.
+services:
+  - type: web
+    name: giatinh-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    preDeployCommand: node dist/scripts/seed.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLIENT_ORIGIN
+        value: http://localhost:3000
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
