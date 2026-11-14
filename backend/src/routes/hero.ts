@@ -49,6 +49,9 @@ router.put('/', requireAuth, async (req: AuthedRequest, res: Response) => {
     return;
   }
 
+  const previous = await HeroImage.find();
+  const kept = new Set(images.map((img) => img.publicId).filter((id): id is string => Boolean(id)));
+
   await HeroImage.deleteMany({});
   const docs = await HeroImage.insertMany(
     images.map((img, index) => ({
@@ -57,6 +60,17 @@ router.put('/', requireAuth, async (req: AuthedRequest, res: Response) => {
       publicId: img.publicId ?? null,
       order: index,
     }))
+  );
+
+  await Promise.all(
+    previous.map(async (img) => {
+      if (!img.publicId || kept.has(img.publicId)) return;
+      try {
+        await destroyAsset(img.publicId);
+      } catch (err) {
+        console.warn('Storage delete failed for replaced hero image:', err);
+      }
+    })
   );
 
   res.json({ images: docs });

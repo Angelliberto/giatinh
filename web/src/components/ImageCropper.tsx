@@ -28,7 +28,7 @@ function sameAspect(a: number | undefined, b: number | undefined) {
 type Props = {
   imageSrc: string;
   title?: string;
-  mode?: 'cover' | 'image' | 'hero';
+  mode?: 'cover' | 'image';
   defaultAspect?: number | undefined;
   locked?: boolean;
   onCancel: () => void;
@@ -259,10 +259,7 @@ export default function ImageCropper({
                     height: '100%',
                     objectFit: 'contain',
                     display: 'block',
-                    filter:
-                      mode === 'cover' || mode === 'hero'
-                        ? 'brightness(0.85) contrast(1.08) grayscale(0.12)'
-                        : undefined,
+                    filter: mode === 'cover' ? 'brightness(0.85) contrast(1.08) grayscale(0.12)' : undefined,
                   }}
                 />
               ) : (

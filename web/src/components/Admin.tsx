@@ -8,6 +8,7 @@ import type { Asset, Post, PostBlock } from '@/lib/types';
 import { mediaPlaceholder } from '@/lib/media';
 import MediaPlayer from '@/components/MediaPlayer';
 import ImageCropper from '@/components/ImageCropper';
+import HeroCropper from '@/components/HeroCropper';
 import CoverFrame, { COVER_ASPECT, DEFAULT_COVER_FOCUS, coverFocusFrom, coverObjectPosition, type CoverFocus } from '@/components/CoverFrame';
 import AudioPlayer, { type AudioTrack } from '@/components/AudioPlayer';
 import ImageCarousel, { CAROUSEL_LIMIT, slidesFromBlock, type CarouselSlide } from '@/components/ImageCarousel';
@@ -138,10 +139,11 @@ type CropSession = {
   slideIndex?: number;
   revokeOnClose?: boolean;
   defaultAspect?: number;
+  replaceId?: string;
 };
 
 function HeroImagesPanel() {
-  const { images, add, remove, reorder, updateCaption } = useHeroCtx();
+  const { images, add, remove, reorder, updateCaption, updateImage } = useHeroCtx();
   const [caption, setCaption] = useState('');
   const [url, setUrl] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -181,35 +183,37 @@ function HeroImagesPanel() {
       src: URL.createObjectURL(file),
       target: 'hero',
       revokeOnClose: true,
-      defaultAspect: 16 / 9,
     });
   };
 
-  const handleAddUrl = async () => {
+  const handleAddUrl = () => {
     if (!url.trim()) return;
     setError('');
-    try {
-      await add({ caption: caption.trim() || 'Untitled', imageUrl: url.trim() });
-      setUrl('');
-      setCaption('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Add failed');
-    }
+    setCrop({
+      src: url.trim(),
+      target: 'hero',
+    });
   };
 
   const applyHeroCrop = async (file: File) => {
+    const replaceId = crop?.replaceId;
     setUploading(true);
     setError('');
     try {
       const res = await apiUpload<{ url: string; publicId: string }>('/api/upload', file, {
         folder: 'hero',
       });
-      await add({
-        caption: caption.trim() || file.name,
-        imageUrl: res.url,
-        publicId: res.publicId,
-      });
-      setCaption('');
+      if (replaceId) {
+        await updateImage(replaceId, { imageUrl: res.url, publicId: res.publicId });
+      } else {
+        await add({
+          caption: caption.trim() || file.name,
+          imageUrl: res.url,
+          publicId: res.publicId,
+        });
+        setCaption('');
+        setUrl('');
+      }
       closeCrop();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
@@ -241,7 +245,7 @@ function HeroImagesPanel() {
           margin: '0 0 32px',
         }}
       >
-        DRAG TO REORDER · {images.length} SLIDE{images.length !== 1 ? 'S' : ''} · SYNCED TO API
+        DRAG TO REORDER · CROP TO FRAME · {images.length} SLIDE{images.length !== 1 ? 'S' : ''}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 32 }}>
@@ -288,6 +292,27 @@ function HeroImagesPanel() {
                 {img.caption}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() =>
+                setCrop({
+                  src: img.imageUrl,
+                  target: 'hero',
+                  replaceId: img._id,
+                })
+              }
+              style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: 9,
+                color: '#8A8A8A',
+                background: 'none',
+                border: '1px solid #333',
+                padding: '4px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              CROP
+            </button>
             <button
               onClick={() => {
                 const cap = prompt('New caption:', img.caption);
@@ -383,7 +408,7 @@ function HeroImagesPanel() {
               cursor: 'pointer',
             }}
           >
-            + ADD URL
+            CROP & ADD
           </button>
           <label
             style={{
@@ -397,7 +422,7 @@ function HeroImagesPanel() {
               cursor: 'pointer',
             }}
           >
-            {uploading ? 'UPLOADING…' : 'UPLOAD (CLOUDINARY)'}
+            {uploading ? 'UPLOADING…' : 'UPLOAD'}
             <input
               type="file"
               accept="image/*"
@@ -417,11 +442,8 @@ function HeroImagesPanel() {
       </div>
 
       {crop && (
-        <ImageCropper
+        <HeroCropper
           imageSrc={crop.src}
-          title="Crop hero image"
-          mode="hero"
-          defaultAspect={crop.defaultAspect}
           onCancel={closeCrop}
           onComplete={applyHeroCrop}
         />
@@ -724,7 +746,7 @@ const NAV_ITEMS = [
   { id: 'entries', icon: '◈', label: 'Entries' },
   { id: 'new', icon: '+', label: 'New Post' },
   { id: 'hero', icon: '▤', label: 'Hero Images' },
-  { id: 'vault', icon: '▣', label: 'Asset Vault' },
+  { id: 'vault', icon: '▣', label: 'Storage' },
 ];
 
 function PostLivePreview({
@@ -1062,7 +1084,7 @@ function VaultPanel() {
       message =
         `WARNING: ${inUse.length} of these file${inUse.length === 1 ? ' is' : 's are'} used in entries.\n\n` +
         `${lines.join('\n')}${more}\n\n` +
-        `Deleting will remove them from the vault, but entries may keep broken media links.\n\n` +
+        `Deleting will remove them from storage, but entries may keep broken media links.\n\n` +
         `Delete anyway?`;
     }
 
@@ -1129,7 +1151,7 @@ function VaultPanel() {
               margin: '0 0 8px',
             }}
           >
-            Asset Vault
+            Storage
           </h2>
           <p style={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: '#8A8A8A', letterSpacing: '0.1em', margin: 0 }}>
             {filtered.length} OF {assets.length}
@@ -1297,7 +1319,7 @@ function VaultPanel() {
       {!loading && filtered.length === 0 && (
         <p style={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: '#8A8A8A', letterSpacing: '0.1em' }}>
           {assets.length === 0
-            ? 'EMPTY — UPLOAD REQUIRES CLOUDINARY KEYS IN BACKEND .ENV'
+            ? 'NO ASSETS YET'
             : 'NO ASSETS MATCH THESE FILTERS'}
         </p>
       )}
@@ -1891,17 +1913,6 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/gtl-logo.svg" alt="GTL" width={22} height={26} style={{ display: 'block', height: 22, width: 'auto' }} />
-          <span
-            style={{
-              fontFamily: 'JetBrains Mono',
-              fontSize: 10,
-              letterSpacing: '0.14em',
-              color: '#F4F4F0',
-              textTransform: 'uppercase',
-            }}
-          >
-            Studio
-          </span>
         </div>
         {NAV_ITEMS.map((item) => {
           const active = activeNav === item.id;
@@ -2386,13 +2397,14 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
                       }
                       style={{
                         width: '100%',
-                        background: 'transparent',
-                        border: 'none',
+                        background: '#0B0B0B',
+                        border: '1px solid #333',
                         outline: 'none',
                         fontFamily: 'Inter',
                         fontSize: 15,
                         lineHeight: 1.8,
                         color: '#c8c8c4',
+                        padding: '12px 14px',
                         resize: 'vertical',
                         minHeight: 90,
                         boxSizing: 'border-box',

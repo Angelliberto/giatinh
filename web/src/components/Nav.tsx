@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const links = [
   { label: 'Archive', href: '/archive' },
@@ -40,17 +41,11 @@ function LocalTime() {
 }
 
 export default function Nav() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { authed } = useAuth();
 
   const isCurrent = (href: string) => pathname === href;
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   return (
     <>
@@ -74,10 +69,9 @@ export default function Nav() {
           left: 0,
           right: 0,
           zIndex: 200,
-          borderBottom: scrolled ? '1px solid #262626' : '1px solid transparent',
-          background: scrolled ? 'rgba(11,11,11,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
-          transition: 'border-color 0.4s, background 0.4s',
+          borderBottom: '1px solid #262626',
+          background: 'rgba(11,11,11,0.92)',
+          backdropFilter: 'blur(12px)',
           padding: '0 clamp(16px,3vw,40px)',
           height: 64,
           display: 'flex',
@@ -117,6 +111,27 @@ export default function Nav() {
               {link.label}
             </Link>
           ))}
+          {authed && (
+            <Link
+              href="/admin"
+              className="magnetic"
+              style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 10,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#0B0B0B',
+                background: '#F4F4F0',
+                textDecoration: 'none',
+                padding: '7px 12px',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#ccc')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#F4F4F0')}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="nav-time">
@@ -171,6 +186,26 @@ export default function Nav() {
             {link.label}
           </Link>
         ))}
+        {authed && (
+          <Link
+            href="/admin"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              fontFamily: 'JetBrains Mono',
+              fontSize: 11,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: '#0B0B0B',
+              background: '#F4F4F0',
+              textDecoration: 'none',
+              padding: '12px 0',
+              marginTop: 14,
+              textAlign: 'center',
+            }}
+          >
+            Admin
+          </Link>
+        )}
         <div style={{ paddingTop: 16 }}>
           <LocalTime />
         </div>

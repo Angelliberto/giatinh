@@ -12,6 +12,7 @@ type HeroCtx = {
   remove: (id: string) => Promise<void>;
   reorder: (fromIndex: number, toIndex: number) => Promise<void>;
   updateCaption: (id: string, caption: string) => Promise<void>;
+  updateImage: (id: string, next: { imageUrl: string; publicId?: string | null }) => Promise<void>;
 };
 
 const HeroContext = createContext<HeroCtx | null>(null);
@@ -68,6 +69,25 @@ export function HeroProvider({ children }: { children: ReactNode }) {
     [images, refresh]
   );
 
+  const updateImage = useCallback(
+    async (id: string, patch: { imageUrl: string; publicId?: string | null }) => {
+      const next = images.map((img) => (img._id === id ? { ...img, ...patch } : img));
+      setImages(next);
+      await api('/api/hero', {
+        method: 'PUT',
+        json: {
+          images: next.map((img) => ({
+            caption: img.caption,
+            imageUrl: img.imageUrl,
+            publicId: img.publicId ?? null,
+          })),
+        },
+      });
+      await refresh();
+    },
+    [images, refresh]
+  );
+
   const updateCaption = useCallback(
     async (id: string, caption: string) => {
       const next = images.map((img) => (img._id === id ? { ...img, caption } : img));
@@ -88,7 +108,7 @@ export function HeroProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <HeroContext.Provider value={{ images, loading, refresh, add, remove, reorder, updateCaption }}>
+    <HeroContext.Provider value={{ images, loading, refresh, add, remove, reorder, updateCaption, updateImage }}>
       {children}
     </HeroContext.Provider>
   );

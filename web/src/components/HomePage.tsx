@@ -7,25 +7,17 @@ import { useHeroCtx } from '@/hooks/useHero';
 import type { Post } from '@/lib/types';
 import { api } from '@/lib/api';
 import RecentWorkCarousel from '@/components/RecentWorkCarousel';
+import { HERO_FRAME_HEIGHT, HERO_FRAME_HEIGHT_MOBILE } from '@/lib/heroFrame';
 
 const RECENT_COUNT = 5;
 
 function HeroSlideshow() {
   const { images } = useHeroCtx();
   const [current, setCurrent] = useState(0);
-  const [scrollY, setScrollY] = useState(0);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const captionRef = useRef<HTMLSpanElement>(null);
   const currentRef = useRef(0);
   const isAnimating = useRef(false);
   const timeline = useRef<gsap.core.Timeline | null>(null);
-  const captionReady = useRef(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   useEffect(() => () => {
     timeline.current?.kill();
@@ -88,24 +80,6 @@ function HeroSlideshow() {
     return () => clearInterval(id);
   }, [images.length, goTo]);
 
-  const activeImg = images[current];
-
-  useLayoutEffect(() => {
-    const el = captionRef.current;
-    if (!el) return;
-    if (!captionReady.current) {
-      captionReady.current = true;
-      gsap.set(el, { opacity: 1, y: 0 });
-      return;
-    }
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    gsap.fromTo(
-      el,
-      { opacity: 0, y: 8 },
-      { opacity: 1, y: 0, duration: reduce ? 0 : 0.9, ease: 'power2.out' }
-    );
-  }, [current, activeImg?.caption]);
-
   return (
     <div
       style={{
@@ -132,70 +106,46 @@ function HeroSlideshow() {
             alt={image.caption}
             style={{
               width: '100%',
-              height: '120%',
+              height: '100%',
               objectFit: 'cover',
+              objectPosition: 'center',
               filter: 'brightness(0.9) contrast(1.05) grayscale(0.08)',
-              position: 'absolute',
-              top: '-10%',
-              transform: `translateY(${scrollY * 0.12}px)`,
+              display: 'block',
             }}
           />
         </div>
       ))}
 
       <div
-        style={{
-          position: 'absolute',
-          top: 80,
-          right: 28,
-          width: 52,
-          height: 52,
-          borderTop: '1px solid rgba(244,244,240,0.2)',
-          borderRight: '1px solid rgba(244,244,240,0.2)',
-          zIndex: 3,
-        }}
+          className="hero-mark"
+          style={{
+            position: 'absolute',
+            top: 80,
+            right: 28,
+            width: 52,
+            height: 52,
+            borderTop: '1px solid rgba(244,244,240,0.2)',
+            borderRight: '1px solid rgba(244,244,240,0.2)',
+            zIndex: 3,
+          }}
       />
       <div
-        style={{
-          position: 'absolute',
-          bottom: 28,
-          right: 28,
-          width: 52,
-          height: 52,
-          borderBottom: '1px solid rgba(244,244,240,0.2)',
-          borderRight: '1px solid rgba(244,244,240,0.2)',
-          zIndex: 3,
-        }}
-      />
-
-      {activeImg && (
-        <div style={{ position: 'absolute', bottom: 28, left: 24, zIndex: 4 }}>
-          <span
-            ref={captionRef}
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 10,
-              color: 'rgba(244,244,240,0.85)',
-              letterSpacing: '0.08em',
-              display: 'inline-block',
-              textShadow: '0 1px 12px rgba(0,0,0,0.55)',
-            }}
-          >
-            {activeImg.caption}
-          </span>
-        </div>
-      )}
-
-      {images.length > 1 && (
-        <div
+          className="hero-mark"
           style={{
             position: 'absolute',
             bottom: 28,
-            right: 24,
-            display: 'flex',
-            gap: 6,
-            zIndex: 4,
+            right: 28,
+            width: 52,
+            height: 52,
+            borderBottom: '1px solid rgba(244,244,240,0.2)',
+            borderRight: '1px solid rgba(244,244,240,0.2)',
+            zIndex: 3,
           }}
+      />
+
+      {images.length > 1 && (
+        <div
+          className="hero-dots"
         >
           {images.map((_, i) => (
             <button
@@ -264,74 +214,117 @@ export default function HomePage() {
         />
       </div>
 
-      <section style={{ minHeight: '100svh', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        .home-hero {
+          height: ${HERO_FRAME_HEIGHT};
+          margin-top: 64px;
+          position: relative;
+          overflow: hidden;
+        }
+        .hero-shade {
+          position: absolute;
+          inset: 0;
+          z-index: 5;
+          pointer-events: none;
+          background: linear-gradient(to right, rgba(11,11,11,0.58) 0%, rgba(11,11,11,0.28) 48%, rgba(11,11,11,0.04) 100%);
+        }
+        .hero-copy {
+          position: relative;
+          z-index: 10;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: clamp(32px, 6vw, 80px) clamp(20px, 4vw, 60px);
+          max-width: 680px;
+        }
+        .hero-title {
+          font-family: 'Playfair Display', serif;
+          font-weight: 900;
+          font-size: clamp(40px, 6.5vw, 88px);
+          line-height: 0.92;
+          color: #F4F4F0;
+          margin: 0;
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+          text-shadow: 0 2px 28px rgba(0,0,0,0.45);
+        }
+        .hero-kicker {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          color: rgba(244,244,240,0.55);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin: 28px 0 0;
+          max-width: 360px;
+          line-height: 1.6;
+          text-shadow: 0 1px 12px rgba(0,0,0,0.5);
+        }
+        .hero-actions {
+          margin-top: 44px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          align-items: center;
+        }
+        .hero-scroll {
+          margin-top: auto;
+          padding-top: 60px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .hero-dots {
+          position: absolute;
+          bottom: 28px;
+          right: 24px;
+          display: flex;
+          gap: 6px;
+          z-index: 4;
+        }
+        @media (max-width: 640px) {
+          .home-hero { height: ${HERO_FRAME_HEIGHT_MOBILE}; }
+          .hero-shade {
+            background: linear-gradient(to top, rgba(11,11,11,0.9) 0%, rgba(11,11,11,0.55) 38%, rgba(11,11,11,0.08) 68%);
+          }
+          .hero-copy {
+            justify-content: flex-end;
+            max-width: none;
+            padding: 24px 20px 28px;
+          }
+          .hero-title {
+            font-size: clamp(36px, 11vw, 52px);
+            white-space: normal;
+            letter-spacing: -0.03em;
+            line-height: 0.96;
+          }
+          .hero-kicker {
+            margin-top: 14px;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            max-width: 26ch;
+          }
+          .hero-actions { margin-top: 22px; }
+          .hero-scroll { display: none; }
+          .hero-mark { display: none; }
+          .hero-dots { top: 16px; right: 16px; bottom: auto; }
+        }
+      `}</style>
+      <section className="home-hero">
         <div style={{ position: 'absolute', inset: 0 }}>
           <HeroSlideshow />
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 5,
-            background:
-              'linear-gradient(to right, rgba(11,11,11,0.58) 0%, rgba(11,11,11,0.28) 48%, rgba(11,11,11,0.04) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            minHeight: '100svh',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: 'clamp(32px,6vw,80px) clamp(20px,4vw,60px)',
-            paddingTop: 'calc(64px + clamp(32px,6vw,80px))',
-            maxWidth: 680,
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: 'Playfair Display, serif',
-              fontWeight: 900,
-              fontSize: 'clamp(36px, 6.5vw, 88px)',
-              lineHeight: 0.92,
-              color: '#F4F4F0',
-              margin: 0,
-              letterSpacing: '-0.02em',
-              whiteSpace: 'nowrap',
-              textShadow: '0 2px 28px rgba(0,0,0,0.45)',
-            }}
-          >
+        <div className="hero-shade" />
+        <div className="hero-copy">
+          <h1 className="hero-title">
             <span className="line-reveal" style={{ display: 'block' }}>
               <span style={{ ['--delay' as string]: '0.1s' }}>Gia Tinh Lam</span>
             </span>
           </h1>
-          <p
-            style={{
-              fontFamily: 'JetBrains Mono',
-              fontSize: 11,
-              color: 'rgba(244,244,240,0.55)',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              margin: '28px 0 0',
-              maxWidth: 360,
-              lineHeight: 1.6,
-              textShadow: '0 1px 12px rgba(0,0,0,0.5)',
-            }}
-          >
+          <p className="hero-kicker">
             Audiovisual storytelling between film, fashion &amp; music
           </p>
-          <div
-            style={{
-              marginTop: 44,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 16,
-              alignItems: 'center',
-            }}
-          >
+          <div className="hero-actions">
             <Link
               href="/archive"
               style={{
@@ -362,15 +355,7 @@ export default function HomePage() {
               {posts.length} Entr{posts.length === 1 ? 'y' : 'ies'}
             </span>
           </div>
-          <div
-            style={{
-              marginTop: 'auto',
-              paddingTop: 60,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
+          <div className="hero-scroll">
             <div style={{ width: 36, height: 1, background: 'rgba(244,244,240,0.3)' }} />
             <span
               style={{
@@ -409,8 +394,8 @@ export default function HomePage() {
                 paddingRight: 60,
               }}
             >
-              Photography · Audio Compositions · Film Works · Editorial Poetry · Conceptual Art ·
-              Mixed Media · Installation · Performance ·&nbsp;
+              Photography · Audio Compositions · Film Works · Poetry · Conceptual Art ·
+              · Installation · Performance ·&nbsp;
             </span>
           ))}
         </div>
@@ -474,7 +459,7 @@ export default function HomePage() {
               letterSpacing: '0.1em',
             }}
           >
-            NO PUBLISHED ENTRIES — RUN BACKEND SEED OR PUBLISH FROM ADMIN
+            NO PUBLISHED ENTRIES
           </p>
         )}
       </section>

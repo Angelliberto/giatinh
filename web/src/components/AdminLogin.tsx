@@ -67,7 +67,7 @@ export default function AdminLogin({ onLogin }: { onLogin: (pw: string) => Promi
               marginTop: 16,
             }}
           >
-            Studio / Admin Access
+            Admin Access
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export default function AdminLogin({ onLogin }: { onLogin: (pw: string) => Promi
               onMouseEnter={(e) => (e.currentTarget.style.background = '#ccc')}
               onMouseLeave={(e) => (e.currentTarget.style.background = '#F4F4F0')}
             >
-              {busy ? 'Checking…' : 'Enter Studio'}
+              {busy ? 'Checking…' : 'Enter'}
             </button>
           </div>
         </div>

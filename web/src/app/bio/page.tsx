@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Nav from '@/components/Nav';
 import BioPage from '@/components/BioPage';
 
 export const metadata: Metadata = {
@@ -9,10 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <>
-      <Nav />
-      <BioPage />
-    </>
-  );
+  return <BioPage />;
 }

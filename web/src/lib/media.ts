@@ -17,7 +17,7 @@ export function detectMediaProvider(url: string): MediaProvider {
   if (SPOTIFY_PATH.test(url) || SPOTIFY_URI.test(url)) return 'spotify';
   if (YOUTUBE.test(url)) return 'youtube';
   if (VIMEO.test(url)) return 'vimeo';
-  if (AUDIO_EXT.test(url) || VIDEO_EXT.test(url) || /res\.cloudinary\.com/i.test(url)) return 'file';
+  if (AUDIO_EXT.test(url) || VIDEO_EXT.test(url)) return 'file';
   if (/^https?:\/\//i.test(url)) return 'file';
   return 'unknown';
 }
@@ -44,7 +44,7 @@ export function spotifyEmbedHeight(url: string): number {
 }
 
 export function isAudioUrl(url: string): boolean {
-  return AUDIO_EXT.test(url) || /\/video\/upload\/.*\.(mp3|wav|ogg|m4a)/i.test(url);
+  return AUDIO_EXT.test(url);
 }
 
 export function mediaPlaceholder(type: 'audio' | 'video' | 'playlist'): string {
