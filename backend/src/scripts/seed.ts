@@ -1,7 +1,6 @@
-import bcrypt from 'bcryptjs';
 import { connectDb } from '../config/db.js';
-import { env } from '../config/env.js';
 import { User } from '../models/User.js';
+import { syncAdminPassword } from '../services/adminPassword.js';
 import { HeroImage } from '../models/HeroImage.js';
 import { Post } from '../models/Post.js';
 
@@ -29,19 +28,16 @@ const DEFAULT_HERO = [
 async function seed() {
   await connectDb();
 
-  const passwordHash = await bcrypt.hash(env.adminPassword, 12);
-  let user = await User.findOne();
-  if (!user) {
-    user = await User.create({
-      email: 'admin@studio.local',
-      passwordHash,
-    });
-    console.log('Created admin user');
-  } else {
-    user.passwordHash = passwordHash;
-    await user.save();
-    console.log('Updated admin password from ADMIN_PASSWORD');
-  }
+  const passwordResult = await syncAdminPassword();
+  const user = await User.findOne();
+  if (!user) throw new Error('Admin user missing after password sync');
+  console.log(
+    passwordResult === 'created'
+      ? 'Created admin user'
+      : passwordResult === 'updated'
+        ? 'Updated admin password from ADMIN_PASSWORD'
+        : 'Admin password already matches ADMIN_PASSWORD'
+  );
 
   const heroCount = await HeroImage.countDocuments();
   if (heroCount === 0) {

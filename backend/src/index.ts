@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { connectDb } from './config/db.js';
+import { syncAdminPassword } from './services/adminPassword.js';
 import authRoutes from './routes/auth.js';
 import heroRoutes from './routes/hero.js';
 import { postsPublicRouter, postsAdminRouter } from './routes/posts.js';
@@ -10,6 +11,10 @@ import { uploadRouter, assetsRouter } from './routes/upload.js';
 
 async function main() {
   await connectDb();
+  const passwordSync = await syncAdminPassword();
+  if (passwordSync !== 'unchanged') {
+    console.log(`Admin password ${passwordSync} from ADMIN_PASSWORD`);
+  }
 
   const app = express();
 
