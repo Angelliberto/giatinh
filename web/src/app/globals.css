@@ -30,8 +30,9 @@ html {
 }
 
 @media (pointer: fine) {
-  html {
-    cursor: none;
+  html,
+  html * {
+    cursor: none !important;
   }
 }
 
@@ -64,6 +65,8 @@ body::-webkit-scrollbar-thumb { background: #333; }
 .cursor-dot,
 .cursor-ring {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
   z-index: 10000;
   mix-blend-mode: difference;
