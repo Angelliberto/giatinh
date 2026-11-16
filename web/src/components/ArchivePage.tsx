@@ -7,7 +7,7 @@ import WorkCard, { formatWorkDate, workCover } from '@/components/WorkCard';
 import { coverObjectPosition } from '@/components/CoverFrame';
 
 export default function ArchivePage() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[] | null>(null);
 
   useEffect(() => {
     api<{ posts: Post[] }>('/api/posts')
@@ -71,7 +71,7 @@ export default function ArchivePage() {
               letterSpacing: '0.12em',
             }}
           >
-            {posts.length} WORK{posts.length === 1 ? '' : 'S'}
+            {posts === null ? '…' : `${posts.length} WORK${posts.length === 1 ? '' : 'S'}`}
           </span>
         </div>
 
@@ -88,7 +88,7 @@ export default function ArchivePage() {
             gap: 2,
           }}
         >
-          {posts.map((post) => (
+          {(posts ?? []).map((post) => (
             <WorkCard
               key={post._id}
               href={`/post/${post.slug}`}
@@ -98,7 +98,19 @@ export default function ArchivePage() {
               objectPosition={coverObjectPosition(post.coverFocus)}
             />
           ))}
-          {posts.length === 0 && (
+          {posts === null ? (
+            <p
+              style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: 10,
+                color: '#8A8A8A',
+                letterSpacing: '0.1em',
+                gridColumn: '1 / -1',
+              }}
+            >
+              LOADING…
+            </p>
+          ) : posts.length === 0 ? (
             <p
               style={{
                 fontFamily: 'JetBrains Mono',
@@ -110,7 +122,7 @@ export default function ArchivePage() {
             >
               NO PUBLISHED ENTRIES
             </p>
-          )}
+          ) : null}
         </div>
       </section>
     </div>

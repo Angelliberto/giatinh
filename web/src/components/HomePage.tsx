@@ -171,7 +171,7 @@ function HeroSlideshow() {
 
 export default function HomePage() {
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[] | null>(null);
 
   useEffect(() => {
     const onScroll = () => {
@@ -189,7 +189,7 @@ export default function HomePage() {
       .catch(() => setPosts([]));
   }, []);
 
-  const recent = posts.slice(0, RECENT_COUNT);
+  const recent = (posts ?? []).slice(0, RECENT_COUNT);
 
   return (
     <div style={{ background: '#0B0B0B', minHeight: '100vh' }} className="grain">
@@ -352,7 +352,7 @@ export default function HomePage() {
                 letterSpacing: '0.08em',
               }}
             >
-              {posts.length} Entr{posts.length === 1 ? 'y' : 'ies'}
+              {posts === null ? '…' : `${posts.length} Entr${posts.length === 1 ? 'y' : 'ies'}`}
             </span>
           </div>
           <div className="hero-scroll">
@@ -448,7 +448,11 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {recent.length > 0 ? (
+        {posts === null ? (
+          <p style={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: '#8A8A8A', letterSpacing: '0.1em' }}>
+            LOADING…
+          </p>
+        ) : recent.length > 0 ? (
           <RecentWorkCarousel posts={recent} />
         ) : (
           <p
